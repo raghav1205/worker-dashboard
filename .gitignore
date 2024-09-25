@@ -1,0 +1,5 @@
+
+./express-server/node_modules
+./express-server/.env
+./react-client/node_modules
+./react-client/.env

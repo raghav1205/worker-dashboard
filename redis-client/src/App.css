@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-sans {
+  font-family: 'Roboto', sans-serif;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+}
+
+.grid-layout {
+  display: grid;
+  grid-template-areas:
+    "worker-1 worker-2"
+    "worker-3 worker-4";
+  gap: 1rem;
+  height: 100%;
+}
+
+.worker-1 {
+  grid-area: worker-1;
+  align-self: start;
+  justify-self: start;
+}
+
+.worker-2 {
+  grid-area: worker-2;
+  align-self: start;
+  justify-self: end;
+}
+
+.worker-3 {
+  grid-area: worker-3;
+  align-self: end;
+  justify-self: start;
+}
+
+.worker-4 {
+  grid-area: worker-4;
+  align-self: end;
+  justify-self: end;
+}
+
+/* Media query for mobile view */
+@media (max-width: 640px) {
+  .grid-layout {
+    grid-template-areas:
+      "worker-1"
+      "worker-2"
+      "worker-3"
+      "worker-4";
+  }
+
+  .worker-1,
+  .worker-2,
+  .worker-3,
+  .worker-4 {
+    align-self: center;
+    justify-self: center;
+  }
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
