@@ -9,7 +9,7 @@ services:
       - redis_data:/data
   worker-dashboard:
     image: raghav1205/redis-worker:latest
-    container_name: redis-worker
+    container_name: redis-worker-new
     ports:
       - "3000:3000"
    
