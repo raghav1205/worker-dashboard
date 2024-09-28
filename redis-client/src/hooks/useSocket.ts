@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateWorkerStatus, setQueueLength } from "../redux/workerSlice.ts";
 
-const WEBSOCKET_URL = "ws://worker.multiplayerbackend.tech"; 
+const WEBSOCKET_URL = "wss://worker.multiplayerbackend.tech"; 
 
 function useSocket() {
   const dispatch = useDispatch();
@@ -27,6 +27,10 @@ function useSocket() {
         dispatch(updateWorkerStatus(data));
       }
     };
+    
+    setInterval(() => {
+      ws.send(JSON.stringify({ type: "keep-alive", timestamp: Date.now() }));
+    }, 30000);
 
     return () => ws.close();
   }, [dispatch]);
