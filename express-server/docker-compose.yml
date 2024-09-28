@@ -7,14 +7,13 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-  stock-ticker:
+  worker-dashboard:
     image: raghav1205/redis-worker:latest
     container_name: redis-worker
     ports:
       - "3000:3000"
    
-    environment:
-      STOCK_API_KEY: ${STOCK_API_KEY}
+   
 
 volumes:
   redis_data:

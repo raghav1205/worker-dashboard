@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateWorkerStatus, setQueueLength } from "../redux/workerSlice.ts";
 
-const WEBSOCKET_URL = "ws://localhost:3000"; 
+const WEBSOCKET_URL = "ws://worker.multiplayerbackend.tech"; 
 
 function useSocket() {
   const dispatch = useDispatch();
