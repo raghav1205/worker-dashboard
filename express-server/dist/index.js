@@ -56,7 +56,7 @@ else {
     app.post("/submission", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { taskId } = req.body;
         PubSubManager_1.default.addToQueue({ taskId });
-        PubSubManager_1.default.updateQueueStatus();
+        // PubSubManager.updateQueueStatus();
         res.send({ message: "Submission received" });
     }));
     app.get("/", (req, res) => {

@@ -7,17 +7,15 @@ import os from "os";
 import cors from "cors";
 import startWorker from "./Worker";
 
-// Check if the process is the master process
 if (cluster.isPrimary) {
-  // This is the master process, we will fork workers here
 
-  const numCPUs = os.cpus().length; // Get the number of CPU cores available
+  // const numCPUs = os.cpus().length; 
 
-  // Fork workers
-  console.log(`Master process is running. Forking ${numCPUs} workers...`);
+  // // Fork workers
+  // console.log(`Master process is running. Forking ${numCPUs} workers...`);
 
   for (let i = 0; i < 4; i++) {
-    cluster.fork(); // Fork a worker for each CPU core
+    cluster.fork(); 
   }
 
   // Listen for worker exit events and replace dead workers
@@ -34,7 +32,7 @@ if (cluster.isPrimary) {
   const wss = new WebSocket.Server({ server });
 
   wss.on("connection", (ws) => {
-    ws.on("message", (message) => {
+    ws.on("message", (message: {taskId: string}) => {
       console.log(`Received message => ${message}`);
     });
     PubSubManager.addSubscriber(ws);
@@ -52,7 +50,7 @@ if (cluster.isPrimary) {
     const { taskId } = req.body;
 
     PubSubManager.addToQueue({ taskId });
-    PubSubManager.updateQueueStatus();
+    // PubSubManager.updateQueueStatus();
 
     res.send({ message: "Submission received" });
   });

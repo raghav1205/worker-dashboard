@@ -35,12 +35,14 @@ class PubSubManager {
     addToQueue(data) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
+            this.updateQueueStatus();
         });
     }
     getFromQueue() {
         return __awaiter(this, void 0, void 0, function* () {
+            const submission = yield this.redisClientPublisher.rPop("submissions");
             this.updateQueueStatus();
-            return yield this.redisClientPublisher.rPop("submissions");
+            return submission;
         });
     }
     updateWorkerStatus(data) {
@@ -48,6 +50,7 @@ class PubSubManager {
             // console.log("sending worker status:", `${data.workerId} - ${data.status}`);
             yield this.redisClientPublisher.hSet("worker-statuses", data.workerId.toString(), JSON.stringify(data));
             yield this.redisClientPublisher.publish("workerStatus", JSON.stringify(data));
+            yield this.updateQueueStatus();
         });
     }
     subscribeToWorkerStatus() {
@@ -74,10 +77,13 @@ class PubSubManager {
         return __awaiter(this, void 0, void 0, function* () {
             // console.log("updating queue status");
             const queueStatus = yield this.getQueueContents();
+            const parsedQueueStatus = queueStatus.map((status) => JSON.parse(status));
+            const queueLength = queueStatus.length;
             const data = {
-                queueStatus,
+                queueStatus: parsedQueueStatus,
+                queueLength,
             };
-            console.log("queueStatus:", data);
+            // console.log("queueStatus:", data);
             this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
         });
     }
@@ -101,10 +107,10 @@ class PubSubManager {
                 ws.send(JSON.stringify(JSON.parse(status)));
             }
             // Send current queue length
-            const queueLength = yield this.redisClientPublisher.get("queue-length");
+            const queueLength = yield this.redisClientPublisher.lLen("submissions");
             ws.send(JSON.stringify({
                 type: "queueStatus",
-                queueLength: parseInt(queueLength || "0"),
+                queueLength: queueLength || 0,
             }));
         });
     }

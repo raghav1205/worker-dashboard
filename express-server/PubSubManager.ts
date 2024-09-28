@@ -40,11 +40,13 @@ class PubSubManager {
 
   public async addToQueue(data: any) {
     await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
+    this.updateQueueStatus();
   }
 
   public async getFromQueue() {
+    const submission = await this.redisClientPublisher.rPop("submissions");
     this.updateQueueStatus();
-    return await this.redisClientPublisher.rPop("submissions");
+    return submission;
   }
 
   public async updateWorkerStatus(data: any) {
@@ -59,6 +61,8 @@ class PubSubManager {
       "workerStatus",
       JSON.stringify(data)
     );
+
+    await this.updateQueueStatus();
   }
 
   private async subscribeToWorkerStatus() {
@@ -85,12 +89,14 @@ class PubSubManager {
   public async updateQueueStatus() {
     // console.log("updating queue status");
     const queueStatus = await this.getQueueContents();
-    
+    const parsedQueueStatus = queueStatus.map((status) => JSON.parse(status));
+    const queueLength = queueStatus.length;
     const data = {
-      queueStatus,
+      queueStatus: parsedQueueStatus,
+      queueLength,
     };
 
-    console.log("queueStatus:", data);
+    // console.log("queueStatus:", data);
     this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
 
@@ -115,11 +121,11 @@ class PubSubManager {
     }
 
     // Send current queue length
-    const queueLength = await this.redisClientPublisher.get("queue-length");
+    const queueLength = await this.redisClientPublisher.lLen("submissions");
     ws.send(
       JSON.stringify({
         type: "queueStatus",
-        queueLength: parseInt(queueLength || "0"),
+        queueLength: queueLength || 0,
       })
     );
   }

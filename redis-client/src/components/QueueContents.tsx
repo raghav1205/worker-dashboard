@@ -17,7 +17,7 @@ const QueueContents: React.FC = () => {
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data);
-      console.log('message:', message);
+      // console.log('message:', message);
       if (message.type === 'queueStatus') {
        
         console.log('queueStatus:', message.data );
@@ -31,19 +31,16 @@ const QueueContents: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4 bg-gray-50 rounded-md shadow-md">
-      <h2 className="text-xl font-semibold mb-4">Queue Contents</h2>
-      {queueContents?.length === 0 ? (
-        <p>No submissions in queue.</p>
-      ) : (
-        <ul className='flex '>
+    <div className=" rounded-md shadow-md w-[80%]  text-center mx-auto">
+      <h2 className="text-xl font-semibold mb-4 text-white">Queue </h2>
+     
+        <ul className='flex items-center gap-4  overflow-x-auto w-full min-h-[4rem] bg-white mx-auto'   >
           {queueContents?.map((submission, index) => (
-            <li key={index} className="mb-2 p-2 bg-white border-2 rounded shadow-sm">
+            <li key={index} className="m-2 p-2 bg-white border-2 border-black rounded shadow-sm text-center text-nowrap">
               {submission.taskId}
             </li>
           ))}
         </ul>
-      )}
     </div>
   );
 };
