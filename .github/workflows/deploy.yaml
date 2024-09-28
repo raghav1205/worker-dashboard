@@ -40,7 +40,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             
-            cd worker-dashboard/server
+            cd worker-dashboard/express-server
             git pull origin master
             sudo docker-compose down
             sudo docker-compose pull
