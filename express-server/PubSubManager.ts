@@ -96,7 +96,6 @@ class PubSubManager {
       queueLength,
     };
 
-    // console.log("queueStatus:", data);
     this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
 
