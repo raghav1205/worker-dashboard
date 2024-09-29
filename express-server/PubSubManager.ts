@@ -70,29 +70,20 @@ class PubSubManager {
 
   public async updateWorkerStatus(data: any) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
-
-    await this.redisClientPublisher.hSet(
-      "worker-statuses",
-      data.workerId.toString(),
-      JSON.stringify(data)
-    );
-
     const workerId = data.workerId;
-
-    // delete if worker is dead
-    if (workerStatuses[workerId] === "Dead") {
-      await this.redisClientPublisher.hDel(
+    if (workerStatuses[workerId] !== "Dead") {
+      await this.redisClientPublisher.hSet(
         "worker-statuses",
-        workerId.toString()
+        data.workerId.toString(),
+        JSON.stringify(data)
       );
+      await this.redisClientPublisher.publish(
+        "workerStatus",
+        JSON.stringify(data)
+      );
+
+      await this.updateQueueStatus();
     }
-
-    await this.redisClientPublisher.publish(
-      "workerStatus",
-      JSON.stringify(data)
-    );
-
-    await this.updateQueueStatus();
   }
 
   private async subscribeToWorkerStatus() {
@@ -149,11 +140,7 @@ class PubSubManager {
       "worker-statuses"
     );
     for (const [workerId, status] of Object.entries(workerStatuses)) {
-      if (workerStatuses[workerId] === "Dead") {
-        await this.redisClientPublisher.hDel("worker-statuses", workerId);
-      } else {
-        ws.send(JSON.stringify(JSON.parse(status)));
-      }
+      ws.send(JSON.stringify(JSON.parse(status)));
     }
 
     // Send current queue length
