@@ -81,12 +81,19 @@ let previousStatus = "Idle";
         taskStartTime = Date.now();
         setTimeout(resolve, taskEndTime);
       });
-
+      
+      if (submission) {
+      PubSubManager.updateQueueItem({
+        taskId: JSON.parse(submission).taskId,
+        status: "Completed",
+      });
+    }
       // After processing, set the worker back to "Idle"
       PubSubManager.updateWorkerStatus({
         workerId,
         status: "Idle",
       });
+      
       previousStatus = "Idle";
 
       if (intervalId) clearInterval(intervalId);

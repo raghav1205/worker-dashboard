@@ -51,7 +51,7 @@ if (cluster.isPrimary) {
   app.post("/submission", async (req, res) => {
     const { taskId } = req.body;
 
-    PubSubManager.addToQueue({ taskId });
+    PubSubManager.addToQueue({ taskId, status: "Pending" });
     // PubSubManager.updateQueueStatus();
 
     res.send({ message: "Submission received" });

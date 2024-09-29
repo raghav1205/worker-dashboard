@@ -49,6 +49,25 @@ class PubSubManager {
     return submission;
   }
 
+  public async updateQueueItem(data: any) {
+    const taskId = data.taskId;
+    const itemIdx = await this.redisClientPublisher.lIndex("submissions", taskId);
+
+    if (itemIdx === null) {
+      return;
+    }
+    
+    await this.redisClientPublisher.lSet(
+      "submissions",
+      parseInt(itemIdx),
+      JSON.stringify(data)
+    );
+
+
+    
+  }
+
+
   public async updateWorkerStatus(data: any) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     await this.redisClientPublisher.hSet(
@@ -89,7 +108,8 @@ class PubSubManager {
   public async updateQueueStatus() {
     // console.log("updating queue status");
     const queueStatus = await this.getQueueContents();
-    const parsedQueueStatus = queueStatus.map((status) => JSON.parse(status));
+    const parsedQueueStatus = queueStatus.map((status) => JSON.parse(status)).filter((status) => status.status !== "Completed");
+
     const queueLength = queueStatus.length;
     const data = {
       queueStatus: parsedQueueStatus,
@@ -98,6 +118,7 @@ class PubSubManager {
     if (queueLength > 0) {
       console.log("queueStatus:", data);
     }
+  
 
     this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }

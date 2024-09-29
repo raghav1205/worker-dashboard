@@ -1,8 +1,8 @@
 // src/redux/workerSlice.js
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { WorkerStatuses } from '../types/types';
-import { WorkerState } from '../types/types';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { WorkerStatuses } from "../types/types";
+import { WorkerState } from "../types/types";
 
 const initialState: WorkerState = {
   workerStatuses: [],
@@ -10,7 +10,7 @@ const initialState: WorkerState = {
 };
 
 const workerSlice = createSlice({
-  name: 'worker',
+  name: "worker",
   initialState,
   reducers: {
     setWorkerStatuses: (state, action: PayloadAction<WorkerStatuses[]>) => {
@@ -27,11 +27,16 @@ const workerSlice = createSlice({
         state.workerStatuses.push(updatedStatus);
       }
     },
-    setQueueStatus: (state, action: PayloadAction<string[]>) => {
-      state.queueStatus = action.payload;
+    setQueueStatus: (state, action: PayloadAction<string>) => {
+      // if (action.payload.length > 0) {
+        console.log("setting queue status:", action.payload);
+        console.log("setting queue status:", action.payload);
+        state.queueStatus.push(...action.payload);
+      // }
     },
   },
 });
 
-export const { setWorkerStatuses, updateWorkerStatus, setQueueStatus } = workerSlice.actions;
+export const { setWorkerStatuses, updateWorkerStatus, setQueueStatus } =
+  workerSlice.actions;
 export default workerSlice.reducer;

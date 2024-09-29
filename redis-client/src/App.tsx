@@ -87,8 +87,8 @@ function SubmitTask() {
 
 function WorkerCard({ worker }: WorkerProps) {
   const { workerId, status, taskId } = worker;
-  console.log(worker.taskId, "worker.taskId");
-  console.log(worker.status, "worker.status");
+  // console.log(worker.taskId, "worker.taskId");
+  // console.log(worker.status, "worker.status");
   const getStatusClasses = () => {
     switch (status) {
       case "Processing":

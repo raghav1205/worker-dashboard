@@ -18,17 +18,20 @@ function useSocket() {
 
     ws.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      console.log(data);
+      // console.log(data);
      
       if (data.type === "queueStatus") {
-        console.log("queueStatus:", data.data.queueStatus);
-        dispatch(setQueueStatus(data.data.queueStatus));
+        // console.log("queueStatus:", data.data.queueStatus);
+        if (data.data.queueStatus.length > 0) {
+          console.log("queueStatus:", data.data.queueStatus);
+          dispatch(setQueueStatus(data.data.queueStatus));
+        }
       } 
-       else {
+       else if (data.hasOwnProperty("workerId")) {
         dispatch(updateWorkerStatus(data));
       }
     };
-    
+     
     setInterval(() => {
       ws.send(JSON.stringify({ type: "keep-alive", timestamp: Date.now() }));
     }, 30000);
