@@ -18,6 +18,7 @@ if (cluster.isPrimary) {
     if (worker.process.pid !== undefined) {
       workerStatuses[worker.process.pid] = "Idle";
     }
+    console.log(workerStatuses, "workerstatuses");
   }
 
   // Listen for worker exit events and replace dead workers
@@ -61,6 +62,7 @@ if (cluster.isPrimary) {
 
     PubSubManager.addToQueue({ taskId, status: "Pending" });
     // PubSubManager.updateQueueStatus();
+    console.log(workerStatuses, "workerstatuses");
 
     res.send({ message: "Submission received" });
   });
