@@ -18,9 +18,10 @@ function useSocket() {
 
     ws.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      console.log(data);
+      // console.log(data);
      
       if (data.type === "queueStatus") {
+        console.log("queueStatus:", data.data.queueStatus);
         dispatch(setQueueStatus(data.data.queueStatus));
       } else if (data.length !== undefined) {
         dispatch(setQueueStatus(data.queueStatus.length));

@@ -50,7 +50,7 @@ class PubSubManager {
   }
 
   public async updateWorkerStatus(data: any) {
-    // console.log("sending worker status:", `${data.workerId} - ${data.status}`);
+    console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     await this.redisClientPublisher.hSet(
       "worker-statuses",
       data.workerId.toString(),
@@ -95,7 +95,9 @@ class PubSubManager {
       queueStatus: parsedQueueStatus,
       queueLength,
     };
-    console.log("queueStatus:", data);
+    if (queueLength > 0) {
+      console.log("queueStatus:", data);
+    }
 
     this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
