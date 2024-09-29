@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { updateWorkerStatus, setQueueLength } from "../redux/workerSlice.ts";
+import { updateWorkerStatus, setQueueStatus } from "../redux/workerSlice.ts";
 
-const WEBSOCKET_URL = "wss://worker.multiplayerbackend.tech"; 
+const WEBSOCKET_URL = `wss://${import.meta.env.VITE_BACKEND_URL}`;
 
 function useSocket() {
   const dispatch = useDispatch();
@@ -19,10 +19,11 @@ function useSocket() {
     ws.onmessage = (message) => {
       const data = JSON.parse(message.data);
       console.log(data);
+     
       if (data.type === "queueStatus") {
-        dispatch(setQueueLength(data.data.queueLength));
+        dispatch(setQueueStatus(data.data.queueStatus));
       } else if (data.length !== undefined) {
-        dispatch(setQueueLength(data.queueStatus.length));
+        dispatch(setQueueStatus(data.queueStatus.length));
       } else {
         dispatch(updateWorkerStatus(data));
       }

@@ -18,7 +18,6 @@ const simulateMemoryFluctuation = () => {
 
   // Simulate memory release
   const memoryRelease = setInterval(() => {
-    
     const releaseSize = Math.floor(Math.random() * 10) + 1; 
     memoryHog.splice(0, releaseSize);
     console.log(`Memory released, current size: ${memoryHog.length} MB`);
@@ -30,7 +29,6 @@ const simulateMemoryFluctuation = () => {
     }
   }, 1000); // Release memory every 1000ms
 };
-
 // Simulate fluctuating resource usage during task processing
 const startWorker = async () => {
   let previousStatus = "Idle";

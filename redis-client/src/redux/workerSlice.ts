@@ -6,7 +6,7 @@ import { WorkerState } from '../types/types';
 
 const initialState: WorkerState = {
   workerStatuses: [],
-  queueLength: 0,
+  queueStatus: [],
 };
 
 const workerSlice = createSlice({
@@ -27,11 +27,11 @@ const workerSlice = createSlice({
         state.workerStatuses.push(updatedStatus);
       }
     },
-    setQueueLength: (state, action: PayloadAction<number>) => {
-      state.queueLength = action.payload;
+    setQueueStatus: (state, action: PayloadAction<string[]>) => {
+      state.queueStatus = action.payload;
     },
   },
 });
 
-export const { setWorkerStatuses, updateWorkerStatus, setQueueLength } = workerSlice.actions;
+export const { setWorkerStatuses, updateWorkerStatus, setQueueStatus } = workerSlice.actions;
 export default workerSlice.reducer;

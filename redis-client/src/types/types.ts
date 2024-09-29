@@ -27,5 +27,5 @@ export interface WorkerStatuses {
 
 export interface WorkerState {
   workerStatuses: WorkerStatuses[];
-  queueLength: number;
+  queueStatus: string[];
 }

@@ -9,7 +9,7 @@ const QueueContents: React.FC = () => {
   const [queueContents, setQueueContents] = useState<Submission[]>([]);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3000'); // Adjust to your server URL
+    const ws = new WebSocket(`ws://${import.meta.env.VITE_BACKEND_URL}`); // Adjust to your server URL
 
     ws.onopen = () => {
       console.log('Connected to WebSocket');
