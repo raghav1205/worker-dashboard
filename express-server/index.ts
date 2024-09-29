@@ -7,14 +7,17 @@ import os from "os";
 import cors from "cors";
 import startWorker from "./Worker";
 
+export const workerStatuses: { [key: number]: string } = {};
 if (cluster.isPrimary) {
   // const numCPUs = os.cpus().length;
-
   // // Fork workers
   // console.log(`Master process is running. Forking ${numCPUs} workers...`);
 
   for (let i = 0; i < 4; i++) {
-    cluster.fork();
+    const worker = cluster.fork();
+    if (worker.process.pid !== undefined) {
+      workerStatuses[worker.process.pid] = "Idle";
+    }
   }
 
   // Listen for worker exit events and replace dead workers
@@ -22,6 +25,10 @@ if (cluster.isPrimary) {
     console.log(`Worker ${worker.process.pid} exited. Forking a new worker...`);
     if (code !== 0) {
       console.log(`Forking a new worker due to exit code: ${code}`);
+      const processId = worker.process.pid;
+      if (processId !== undefined) {
+        workerStatuses[processId] = "Dead";
+      }
       cluster.fork();
     }
   });

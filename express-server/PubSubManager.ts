@@ -1,5 +1,6 @@
 import { RedisClientType, createClient } from "redis";
 import WebSocket from "ws";
+import { workerStatuses } from ".";
 
 class PubSubManager {
   private static instance: PubSubManager;
@@ -70,11 +71,19 @@ class PubSubManager {
 
   public async updateWorkerStatus(data: any) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
+    
     await this.redisClientPublisher.hSet(
       "worker-statuses",
       data.workerId.toString(),
       JSON.stringify(data)
     );
+
+    const workerId = data.workerId;
+    
+    // delete if worker is dead
+    if(workerStatuses[workerId] === "Dead") {
+      await this.redisClientPublisher.hDel("worker-statuses", workerId.toString());
+    }
 
     await this.redisClientPublisher.publish(
       "workerStatus",
