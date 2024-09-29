@@ -71,6 +71,7 @@ class PubSubManager {
   public async updateWorkerStatus(data: any) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
+    console.log("workerstatuses", workerStatuses) 
     if (workerStatuses[workerId] !== "Dead") {
       await this.redisClientPublisher.hSet(
         "worker-statuses",
