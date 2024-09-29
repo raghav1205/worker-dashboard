@@ -46,6 +46,7 @@ if (cluster.isPrimary) {
     });
     PubSubManager.addSubscriber(ws);
 
+    ws.send(JSON.stringify({ workerId: cluster.worker?.process.pid, workerStatuses }));
     ws.on("close", () => {
       console.log("Connection closed");
       PubSubManager.removeSubscriber(ws);

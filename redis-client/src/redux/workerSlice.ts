@@ -14,16 +14,19 @@ const workerSlice = createSlice({
   initialState,
   reducers: {
     setWorkerStatuses: (state, action: PayloadAction<WorkerStatuses[]>) => {
-      state.workerStatuses = action.payload;
+      const filteredStatuses = action.payload.filter(w => w.status !== "Dead");
+      state.workerStatuses = filteredStatuses
     },
     updateWorkerStatus: (state, action: PayloadAction<WorkerStatuses>) => {
-      const updatedStatus = action.payload;
+      let updatedStatus = action.payload
       const workerIndex = state.workerStatuses.findIndex(
         (w) => w.workerId === updatedStatus.workerId
       );
-      if (workerIndex > -1) {
+      if (workerIndex > -1 && updatedStatus.status !== "Dead") {
+
         state.workerStatuses[workerIndex] = updatedStatus;
       } else {
+
         state.workerStatuses.push(updatedStatus);
       }
     },
