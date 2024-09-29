@@ -33,7 +33,7 @@ function App() {
           </div>
           {/* Grid Layout for worker statuses */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-            {workerStatuses.slice(0, 4).map((worker) => (
+            {workerStatuses.map((worker) => (
               <motion.div
                 key={worker.workerId}
                 className="mx-auto w-full max-w-xs md:max-w-sm lg:max-w-md"

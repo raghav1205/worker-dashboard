@@ -8,20 +8,22 @@ import cors from "cors";
 import startWorker from "./Worker";
 
 if (cluster.isPrimary) {
-
-  // const numCPUs = os.cpus().length; 
+  // const numCPUs = os.cpus().length;
 
   // // Fork workers
   // console.log(`Master process is running. Forking ${numCPUs} workers...`);
 
   for (let i = 0; i < 4; i++) {
-    cluster.fork(); 
+    cluster.fork();
   }
 
   // Listen for worker exit events and replace dead workers
   cluster.on("exit", (worker, code, signal) => {
     console.log(`Worker ${worker.process.pid} exited. Forking a new worker...`);
-    cluster.fork();
+    if (code !== 0) {
+      console.log(`Forking a new worker due to exit code: ${code}`);
+      cluster.fork();
+    }
   });
 } else {
   const app = express();
@@ -32,7 +34,7 @@ if (cluster.isPrimary) {
   const wss = new WebSocket.Server({ server });
 
   wss.on("connection", (ws) => {
-    ws.on("message", (message: {taskId: string}) => {
+    ws.on("message", (message: { taskId: string }) => {
       console.log(`Received message => ${message}`);
     });
     PubSubManager.addSubscriber(ws);
