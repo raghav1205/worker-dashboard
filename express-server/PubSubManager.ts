@@ -52,26 +52,25 @@ class PubSubManager {
 
   public async updateQueueItem(data: any) {
     const taskId = data.taskId;
-    const itemIdx = await this.redisClientPublisher.lIndex("submissions", taskId);
+    const itemIdx = await this.redisClientPublisher.lIndex(
+      "submissions",
+      taskId
+    );
 
     if (itemIdx === null) {
       return;
     }
-    
+
     await this.redisClientPublisher.lSet(
       "submissions",
       parseInt(itemIdx),
       JSON.stringify(data)
     );
-
-
-    
   }
-
 
   public async updateWorkerStatus(data: any) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
-    
+
     await this.redisClientPublisher.hSet(
       "worker-statuses",
       data.workerId.toString(),
@@ -79,10 +78,13 @@ class PubSubManager {
     );
 
     const workerId = data.workerId;
-    
+
     // delete if worker is dead
-    if(workerStatuses[workerId] === "Dead") {
-      await this.redisClientPublisher.hDel("worker-statuses", workerId.toString());
+    if (workerStatuses[workerId] === "Dead") {
+      await this.redisClientPublisher.hDel(
+        "worker-statuses",
+        workerId.toString()
+      );
     }
 
     await this.redisClientPublisher.publish(
@@ -112,12 +114,12 @@ class PubSubManager {
     return await this.redisClientPublisher.lRange("submissions", 0, -1);
   }
 
-
-
   public async updateQueueStatus() {
     // console.log("updating queue status");
     const queueStatus = await this.getQueueContents();
-    const parsedQueueStatus = queueStatus.map((status) => JSON.parse(status)).filter((status) => status.status !== "Completed");
+    const parsedQueueStatus = queueStatus
+      .map((status) => JSON.parse(status))
+      .filter((status) => status.status !== "Completed");
 
     const queueLength = queueStatus.length;
     const data = {
@@ -127,12 +129,10 @@ class PubSubManager {
     if (queueLength > 0) {
       console.log("queueStatus:", data);
     }
-  
 
     this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
 
- 
   public async addSubscriber(ws: WebSocket) {
     this.subscribers.add(ws);
     await this.sendCurrentState(ws);
@@ -149,7 +149,11 @@ class PubSubManager {
       "worker-statuses"
     );
     for (const [workerId, status] of Object.entries(workerStatuses)) {
-      ws.send(JSON.stringify(JSON.parse(status)));
+      if (workerStatuses[workerId] === "Dead") {
+        await this.redisClientPublisher.hDel("worker-statuses", workerId);
+      } else {
+        ws.send(JSON.stringify(JSON.parse(status)));
+      }
     }
 
     // Send current queue length
