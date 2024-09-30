@@ -74,7 +74,7 @@ const startWorker = async () => {
         }, 1000);
       }
 
-      simulateMemoryFluctuation();
+      // simulateMemoryFluctuation();
 
       // Simulate task processing delay
 
