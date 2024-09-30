@@ -60,11 +60,10 @@ const startWorker = async () => {
         const taskId = JSON.parse(submission).taskId;
         previousStatus = "Processing";
         taskEndTime = Math.floor(Math.random() * 10000) + 1000;
-        
 
         intervalId = setInterval(() => {
           const timeElapsed = Date.now() - taskStartTime;
-          const timeRemaining = Math.floor(taskEndTime - timeElapsed)
+          const timeRemaining = Math.floor(taskEndTime - timeElapsed);
           PubSubManager.updateWorkerStatus({
             workerId,
             taskId,
@@ -78,11 +77,18 @@ const startWorker = async () => {
       // simulateMemoryFluctuation();
 
       // Simulate task processing delay
-
-      await new Promise((resolve) => {
-        taskStartTime = Date.now();
-        setTimeout(resolve, taskEndTime);
-      });
+      try {
+        await new Promise((resolve) => {
+          taskStartTime = Date.now();
+          setTimeout(resolve, taskEndTime);
+        });
+      } catch (error) {
+        console.log(error, "promise error");
+        PubSubManager.updateWorkerStatus({
+          workerId,
+          status: "Dead",
+        });
+      }
 
       if (submission) {
         PubSubManager.updateQueueItem({
