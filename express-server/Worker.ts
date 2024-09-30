@@ -33,10 +33,13 @@ const simulateMemoryFluctuation = () => {
 // Simulate fluctuating resource usage during task processing
 const startWorker = async () => {
   let previousStatus = "Idle";
-  PubSubManager.updateWorkerStatus({
-    workerId: cluster.worker?.process.pid,
-    status: "Not started",
-  });
+  const workerId = cluster.worker?.process.pid;
+  if (workerId) {
+    PubSubManager.updateWorkerStatus({
+      workerId,
+      status: "Not started",
+    });
+  }
 
   while (true) {
     const workerId = cluster.worker?.process.pid;
@@ -90,7 +93,6 @@ const startWorker = async () => {
             status: "Dead",
           });
         }
-     
       }
 
       if (submission) {
@@ -112,7 +114,6 @@ const startWorker = async () => {
             status: "Idle",
           });
         }
-      
       }
 
       previousStatus = "Idle";
