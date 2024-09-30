@@ -1,6 +1,5 @@
 import { RedisClientType, createClient } from "redis";
 import WebSocket from "ws";
-import { workerStatuses } from ".";
 import process from "process";
 
 interface WorkerStatus {
@@ -9,7 +8,6 @@ interface WorkerStatus {
   status: string;
   timeRemaining?: number;
   workerResources?: any;
-
 }
 
 class PubSubManager {
@@ -17,6 +15,7 @@ class PubSubManager {
   private redisClientPublisher: RedisClientType;
   private redisClientSubscriber: RedisClientType;
   private subscribers: Set<WebSocket>;
+  private workerStatuses: Set<WorkerStatus>;
 
   constructor() {
     this.redisClientPublisher = createClient({
@@ -26,6 +25,7 @@ class PubSubManager {
       url: "redis://redis:6379",
     });
     this.subscribers = new Set();
+    this.workerStatuses = new Set();
 
     this.redisClientPublisher.on("error", (err) =>
       console.log("Redis Publisher Error", err)
@@ -40,7 +40,6 @@ class PubSubManager {
     this.subscribeToWorkerStatus();
     this.subscribeToQueueStatus();
     this.checkIfWorkerIsDead(process.pid);
-   
   }
 
   static getInstance() {
@@ -83,17 +82,28 @@ class PubSubManager {
   public async updateWorkerStatus(data: WorkerStatus) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
+    console.log("workerId", workerId);
+    console.log("status", this.workerStatuses);
+    if (data.status === "Dead") {
+      console.log("Worker is dead", workerId);
+      await this.redisClientPublisher.hDel(
+        "worker-statuses",
+        workerId.toString()
+      );
+      this.workerStatuses.delete(data);
+    } else {
       await this.redisClientPublisher.hSet(
         "worker-statuses",
         data.workerId.toString(),
         JSON.stringify(data)
       );
-      await this.redisClientPublisher.publish(
-        "workerStatus",
-        JSON.stringify(data)
-      );
-
-      await this.updateQueueStatus();
+      this.workerStatuses.add(data);
+    }
+    await this.redisClientPublisher.publish(
+      "workerStatus",
+      JSON.stringify(this.workerStatuses)
+    );
+    await this.updateQueueStatus();
   }
 
   private async subscribeToWorkerStatus() {
@@ -149,8 +159,6 @@ class PubSubManager {
     for (const [workerId, status] of Object.entries(workerStatuses)) {
       ws.send(JSON.stringify(JSON.parse(status)));
     }
-
-   
   }
 
   private broadcastMessage(data: any) {
@@ -166,7 +174,10 @@ class PubSubManager {
         workerId,
         status: "Dead",
       });
-      await this.redisClientPublisher.hDel("worker-statuses", workerId.toString());
+      await this.redisClientPublisher.hDel(
+        "worker-statuses",
+        workerId.toString()
+      );
     });
   }
 }
