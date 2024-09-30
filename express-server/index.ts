@@ -69,9 +69,9 @@ if (cluster.isPrimary) {
   });
 
   process.on("exit", async () => {
-    console.log("Worker is exiting", process);
+    console.log("Worker is exiting", process.pid);
     await PubSubManager.updateWorkerStatus({
-      process,
+      workerId: process.pid,
       status: "Dead",
     });
   });
