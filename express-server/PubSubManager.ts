@@ -83,6 +83,8 @@ class PubSubManager {
   public async updateWorkerStatus(data: WorkerStatus) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
+    console.log("workerId", workerId);
+    console.log("status", data);
       await this.redisClientPublisher.hSet(
         "worker-statuses",
         data.workerId.toString(),
