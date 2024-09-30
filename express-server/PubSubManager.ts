@@ -3,6 +3,15 @@ import WebSocket from "ws";
 import { workerStatuses } from ".";
 import process from "process";
 
+interface WorkerStatus {
+  workerId: number;
+  taskId?: string;
+  status: string;
+  timeRemaining?: number;
+  workerResources?: any;
+
+}
+
 class PubSubManager {
   private static instance: PubSubManager;
   private redisClientPublisher: RedisClientType;
@@ -71,7 +80,7 @@ class PubSubManager {
     );
   }
 
-  public async updateWorkerStatus(data: any) {
+  public async updateWorkerStatus(data: WorkerStatus) {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
       await this.redisClientPublisher.hSet(

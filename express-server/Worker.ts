@@ -43,7 +43,7 @@ const startWorker = async () => {
     let intervalId = null;
     let taskStartTime: number = 0;
     let taskEndTime: number = 0;
-    if (previousStatus !== "Idle") {
+    if (previousStatus !== "Idle" && workerId) {
       PubSubManager.updateWorkerStatus({
         workerId,
         status: "Idle",
@@ -56,7 +56,7 @@ const startWorker = async () => {
     if (submission) {
       console.log("Processing submission:", submission);
 
-      if (previousStatus !== "Processing") {
+      if (previousStatus !== "Processing" && workerId) {
         const taskId = JSON.parse(submission).taskId;
         previousStatus = "Processing";
         taskEndTime = Math.floor(Math.random() * 10000) + 1000;
@@ -84,10 +84,13 @@ const startWorker = async () => {
         });
       } catch (error) {
         console.log(error, "promise error");
-        PubSubManager.updateWorkerStatus({
-          workerId,
-          status: "Dead",
-        });
+        if (workerId) {
+          PubSubManager.updateWorkerStatus({
+            workerId,
+            status: "Dead",
+          });
+        }
+     
       }
 
       if (submission) {
@@ -103,10 +106,13 @@ const startWorker = async () => {
         });
       } else {
         // After processing, set the worker back to "Idle"
-        PubSubManager.updateWorkerStatus({
-          workerId,
-          status: "Idle",
-        });
+        if (workerId) {
+          PubSubManager.updateWorkerStatus({
+            workerId,
+            status: "Idle",
+          });
+        }
+      
       }
 
       previousStatus = "Idle";
