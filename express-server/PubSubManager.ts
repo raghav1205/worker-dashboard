@@ -1,6 +1,7 @@
 import { RedisClientType, createClient } from "redis";
 import WebSocket from "ws";
 import { workerStatuses } from ".";
+import process from "process";
 
 class PubSubManager {
   private static instance: PubSubManager;
@@ -29,6 +30,8 @@ class PubSubManager {
 
     this.subscribeToWorkerStatus();
     this.subscribeToQueueStatus();
+    this.checkIfWorkerIsDead(process.pid);
+   
   }
 
   static getInstance() {
@@ -157,6 +160,17 @@ class PubSubManager {
   private broadcastMessage(data: any) {
     this.subscribers.forEach((subscriber) => {
       subscriber.send(data);
+    });
+  }
+
+  private checkIfWorkerIsDead(workerId: number) {
+    process.on("exit", async () => {
+      console.log("Worker is exiting", workerId);
+      await this.updateWorkerStatus({
+        workerId,
+        status: "Dead",
+      });
+      await this.redisClientPublisher.hDel("worker-statuses", workerId.toString());
     });
   }
 }
