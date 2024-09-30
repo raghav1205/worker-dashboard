@@ -60,10 +60,11 @@ const startWorker = async () => {
         const taskId = JSON.parse(submission).taskId;
         previousStatus = "Processing";
         taskEndTime = Math.floor(Math.random() * 10000) + 1000;
+        
 
         intervalId = setInterval(() => {
           const timeElapsed = Date.now() - taskStartTime;
-          const timeRemaining = taskEndTime - timeElapsed;
+          const timeRemaining = Math.floor(taskEndTime - timeElapsed)
           PubSubManager.updateWorkerStatus({
             workerId,
             taskId,
