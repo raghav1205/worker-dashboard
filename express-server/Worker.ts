@@ -54,7 +54,7 @@ const startWorker = async () => {
     const submission = await PubSubManager.getFromQueue();
 
     if (submission) {
-      // console.log("Processing submission:", submission);
+      console.log("Processing submission:", submission);
 
       if (previousStatus !== "Processing") {
         const taskId = JSON.parse(submission).taskId;
