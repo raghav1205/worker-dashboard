@@ -34,6 +34,7 @@ if (cluster.isPrimary) {
     }
   });
 } else {
+
   const app = express();
   app.use(express.json());
   app.use(cors());
@@ -65,6 +66,14 @@ if (cluster.isPrimary) {
     console.log(workerStatuses, "workerstatuses");
 
     res.send({ message: "Submission received" });
+  });
+
+  process.on("exit", async () => {
+    console.log("Worker is exiting", process);
+    await PubSubManager.updateWorkerStatus({
+      process,
+      status: "Dead",
+    });
   });
 
   app.get("/", (req, res) => {
