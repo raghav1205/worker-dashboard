@@ -101,14 +101,18 @@ class PubSubManager {
     }
     await this.redisClientPublisher.publish(
       "workerStatus",
-      JSON.stringify(this.workerStatuses)
+      JSON.stringify(data)
     );
     await this.updateQueueStatus();
   }
 
   private async subscribeToWorkerStatus() {
     await this.redisClientSubscriber.subscribe("workerStatus", (message) => {
-      this.broadcastMessage(message);
+      console.log("recent worker status:", message);
+      this.addWorkerStatus(JSON.parse(message));
+      console.log("workerStatuses", this.workerStatuses);
+      this.broadcastMessage(this.workerStatuses);
+      // this.broadcastMessage(message);
     });
   }
 
@@ -180,6 +184,15 @@ class PubSubManager {
       );
     });
   }
+  private addWorkerStatus(data: WorkerStatus) {
+    for (const workerStatus of this.workerStatuses) {
+      if (workerStatus.workerId === data.workerId) {
+        this.workerStatuses.delete(workerStatus);
+      }
+    }
+    this.workerStatuses.add(data);
+  }
 }
+
 
 export default PubSubManager.getInstance();
