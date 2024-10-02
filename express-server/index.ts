@@ -16,9 +16,9 @@ if (cluster.isPrimary) {
   for (let i = 0; i < 4; i++) {
     const worker = cluster.fork();
     if (worker.process.pid !== undefined) {
-      workerStatuses[worker.process.pid] = "Idle";
+      // workerStatuses[worker.process.pid] = "Idle";
     }
-    console.log(workerStatuses, "workerstatuses");
+    // console.log(workerStatuses, "workerstatuses");
   }
 
   // Listen for worker exit events and replace dead workers
@@ -28,7 +28,7 @@ if (cluster.isPrimary) {
       console.log(`Forking a new worker due to exit code: ${code}`);
       const processId = worker.process.pid;
       if (processId !== undefined) {
-        workerStatuses[processId] = "Dead";
+        // workerStatuses[processId] = "Dead";
       }
       cluster.fork();
     }
@@ -48,7 +48,7 @@ if (cluster.isPrimary) {
     });
     PubSubManager.addSubscriber(ws);
 
-    ws.send(JSON.stringify({ workerId: cluster.worker?.process.pid, workerStatuses }));
+    // ws.send(JSON.stringify({ workerId: cluster.worker?.process.pid, workerStatuses }));
     ws.on("close", () => {
       console.log("Connection closed");
       PubSubManager.removeSubscriber(ws);
@@ -56,14 +56,14 @@ if (cluster.isPrimary) {
 
     // ws.send("Hello! Message From Server!!");
   });
-
+  console.log("new worker", process.pid);
   startWorker();
   app.post("/submission", async (req, res) => {
     const { taskId } = req.body;
 
     PubSubManager.addToQueue({ taskId, status: "Pending" });
     // PubSubManager.updateQueueStatus();
-    console.log(workerStatuses, "workerstatuses");
+    // console.log(workerStatuses, "workerstatuses");
 
     res.send({ message: "Submission received" });
   });

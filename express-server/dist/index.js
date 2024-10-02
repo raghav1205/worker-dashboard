@@ -12,27 +12,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.workerStatuses = void 0;
 const express_1 = __importDefault(require("express"));
 const ws_1 = __importDefault(require("ws"));
 const http_1 = __importDefault(require("http"));
 const PubSubManager_1 = __importDefault(require("./PubSubManager"));
 const cluster_1 = __importDefault(require("cluster"));
-const os_1 = __importDefault(require("os"));
 const cors_1 = __importDefault(require("cors"));
 const Worker_1 = __importDefault(require("./Worker"));
-// Check if the process is the master process
+exports.workerStatuses = {};
 if (cluster_1.default.isPrimary) {
-    // This is the master process, we will fork workers here
-    const numCPUs = os_1.default.cpus().length; // Get the number of CPU cores available
-    // Fork workers
-    console.log(`Master process is running. Forking ${numCPUs} workers...`);
+    // const numCPUs = os.cpus().length;
+    // // Fork workers
+    // console.log(`Master process is running. Forking ${numCPUs} workers...`);
     for (let i = 0; i < 4; i++) {
-        cluster_1.default.fork(); // Fork a worker for each CPU core
+        const worker = cluster_1.default.fork();
+        if (worker.process.pid !== undefined) {
+            // workerStatuses[worker.process.pid] = "Idle";
+        }
+        // console.log(workerStatuses, "workerstatuses");
     }
     // Listen for worker exit events and replace dead workers
     cluster_1.default.on("exit", (worker, code, signal) => {
         console.log(`Worker ${worker.process.pid} exited. Forking a new worker...`);
-        cluster_1.default.fork();
+        if (code !== 0) {
+            console.log(`Forking a new worker due to exit code: ${code}`);
+            const processId = worker.process.pid;
+            if (processId !== undefined) {
+                // workerStatuses[processId] = "Dead";
+            }
+            cluster_1.default.fork();
+        }
     });
 }
 else {
@@ -46,18 +56,28 @@ else {
             console.log(`Received message => ${message}`);
         });
         PubSubManager_1.default.addSubscriber(ws);
+        // ws.send(JSON.stringify({ workerId: cluster.worker?.process.pid, workerStatuses }));
         ws.on("close", () => {
             console.log("Connection closed");
             PubSubManager_1.default.removeSubscriber(ws);
         });
         // ws.send("Hello! Message From Server!!");
     });
+    console.log("new worker", process.pid);
     (0, Worker_1.default)();
     app.post("/submission", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         const { taskId } = req.body;
-        PubSubManager_1.default.addToQueue({ taskId });
+        PubSubManager_1.default.addToQueue({ taskId, status: "Pending" });
         // PubSubManager.updateQueueStatus();
+        // console.log(workerStatuses, "workerstatuses");
         res.send({ message: "Submission received" });
+    }));
+    process.on("exit", () => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Worker is exiting", process.pid);
+        yield PubSubManager_1.default.updateWorkerStatus({
+            workerId: process.pid,
+            status: "Dead",
+        });
     }));
     app.get("/", (req, res) => {
         res.send("Hello World");

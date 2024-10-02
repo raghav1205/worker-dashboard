@@ -18,11 +18,17 @@ class PubSubManager {
   private workerStatuses: Set<WorkerStatus>;
 
   constructor() {
+    // this.redisClientPublisher = createClient({
+    //   url: "redis://redis:6379",
+    // });
+    // this.redisClientSubscriber = createClient({
+    //   url: "redis://redis:6379",
+    // });
     this.redisClientPublisher = createClient({
-      url: "redis://redis:6379",
+      url: "redis://localhost:6379",
     });
     this.redisClientSubscriber = createClient({
-      url: "redis://redis:6379",
+      url: "redis://localhost:6379",
     });
     this.subscribers = new Set();
     this.workerStatuses = new Set();
@@ -38,7 +44,7 @@ class PubSubManager {
     this.redisClientSubscriber.connect();
 
     this.subscribeToWorkerStatus();
-    this.subscribeToQueueStatus();
+    // this.subscribeToQueueStatus();
     this.checkIfWorkerIsDead(process.pid);
   }
 
@@ -83,35 +89,43 @@ class PubSubManager {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
     console.log("workerId", workerId);
-    console.log("status", this.workerStatuses);
-    if (data.status === "Dead") {
-      console.log("Worker is dead", workerId);
-      await this.redisClientPublisher.hDel(
-        "worker-statuses",
-        workerId.toString()
-      );
-      this.workerStatuses.delete(data);
-    } else {
-      await this.redisClientPublisher.hSet(
-        "worker-statuses",
-        data.workerId.toString(),
-        JSON.stringify(data)
-      );
-      this.workerStatuses.add(data);
-    }
-    await this.redisClientPublisher.publish(
-      "workerStatus",
-      JSON.stringify(data)
-    );
-    await this.updateQueueStatus();
+   
+    // if (data.status === "Dead") {
+      //   console.log("Worker is dead", workerId);
+      //   await this.redisClientPublisher.hDel(
+        //     "worker-statuses",
+        //     workerId.toString()
+        //   );
+        //   this.workerStatuses.delete(data);
+        // } else {
+          await this.redisClientPublisher.hSet(
+            "worker-statuses",
+            data.workerId.toString(),
+            JSON.stringify(data)
+          );
+          this.workerStatuses.add(data);
+          // }
+          await this.redisClientPublisher.publish(
+            "workerStatus",
+            JSON.stringify(data)
+          );
+          console.log("status", this.workerStatuses);
+          const hsetData = await this.redisClientPublisher.hGet(
+            "worker-statuses",
+            workerId.toString()
+          );
+          console.log("hsetData", hsetData);
+    // await this.updateQueueStatus();
   }
 
   private async subscribeToWorkerStatus() {
     await this.redisClientSubscriber.subscribe("workerStatus", (message) => {
-      console.log("recent worker status:", message);
+      // console.log("recent worker status:", message);
       this.addWorkerStatus(JSON.parse(message));
-      console.log("workerStatuses", this.workerStatuses);
-      this.broadcastMessage(this.workerStatuses);
+      console.log("workerStatuses", this.workerStatuses.size);
+      const workerStatusesArray = Array.from(this.workerStatuses);
+      console.log("workerStatusesArray", workerStatusesArray.length);
+      this.broadcastMessage(JSON.stringify({type:'workerStatus', data: workerStatusesArray}));
       // this.broadcastMessage(message);
     });
   }
@@ -132,7 +146,7 @@ class PubSubManager {
   public async updateQueueStatus() {
     // console.log("updating queue status");
     const queueStatus = await this.getQueueContents();
-    console.log("queueStatus before :", queueStatus);
+    // console.log("queueStatus before :", queueStatus);
     const parsedQueueStatus = queueStatus
       .map((status) => JSON.parse(status))
       .filter((status) => status.status !== "Completed");
@@ -140,9 +154,9 @@ class PubSubManager {
     const data = {
       queueStatus: parsedQueueStatus,
     };
-    console.log("queueStatus after", data.queueStatus);
+    // console.log("queueStatus after", data.queueStatus);
 
-    this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
+    // this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
 
   public async addSubscriber(ws: WebSocket) {
@@ -166,8 +180,22 @@ class PubSubManager {
   }
 
   private broadcastMessage(data: any) {
+   const broadData = JSON.parse(data);
+   console.log("worker no:", process.pid);
+   console.log("broadData", broadData);
+  //  for (let  item of broadData.data){
+  //     console.log(item);
+  //  }
+    
     this.subscribers.forEach((subscriber) => {
+      
+      // subscriber.send(data);
+      try{
       subscriber.send(data);
+      }
+      catch(err){
+        console.log("Error in sending message to subscriber:", err);
+      }
     });
   }
 

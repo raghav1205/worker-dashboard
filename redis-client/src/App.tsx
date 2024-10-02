@@ -59,7 +59,7 @@ function SubmitTask() {
   const handleSubmit = async () => {
     const randomTaskId = Math.random().toString(36).substring(7);
     const taskId = `Task-${randomTaskId}`;
-    await fetch(`https://${import.meta.env.VITE_BACKEND_URL}/submission`, {
+    await fetch(`http://${import.meta.env.VITE_BACKEND_URL}/submission`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

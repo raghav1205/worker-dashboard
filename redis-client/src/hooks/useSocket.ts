@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updateWorkerStatus, setQueueStatus } from "../redux/workerSlice.ts";
 
-const WEBSOCKET_URL = `wss://${import.meta.env.VITE_BACKEND_URL}`;
+// const WEBSOCKET_URL = `wss://${import.meta.env.VITE_BACKEND_URL}`;
+const WEBSOCKET_URL = `ws://localhost:3000`;
 
 function useSocket() {
   const dispatch = useDispatch();
@@ -18,7 +19,11 @@ function useSocket() {
 
     ws.onmessage = (message) => {
       const data = JSON.parse(message.data);
-      console.log(data);
+      console.log("data:", data);
+      if (data.type === "workerStatus") {
+        console.log("workerStatus:", data);
+        dispatch(updateWorkerStatus(data.data));
+      } 
      
       if (data.type === "queueStatus") {
         // console.log("queueStatus:", data.data.queueStatus);
@@ -28,6 +33,7 @@ function useSocket() {
         }
       } 
        else if (data.hasOwnProperty("workerId")) {
+        console.log("workerStatus:", data);
         dispatch(updateWorkerStatus(data));
       }
     };
