@@ -42,7 +42,7 @@ class PubSubManager {
     console.log("adding to queue:", data);
     const length = await this.redisClientPublisher.lLen("submissions");
     const maxQueueLength = 20;
-    if (length > 20) {
+    if (length >= 20) {
       return -1;
     }
     const transaction = this.redisClientPublisher.multi();
