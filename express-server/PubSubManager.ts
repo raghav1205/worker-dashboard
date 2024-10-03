@@ -53,10 +53,12 @@ class PubSubManager {
   public async addToQueue(data: any) {
     console.log("adding to queue:", data);
     const length = await this.redisClientPublisher.lLen("submissions");
+    const maxQueueLength = 20;
     if (length > 20) {
       return -1;
     }
     await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
+    await this.redisClientPublisher.lTrim("submissions", 0, maxQueueLength - 1);
     return 1;
   }
 

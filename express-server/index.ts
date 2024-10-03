@@ -37,7 +37,7 @@ if (cluster.isPrimary) {
       }
       if (message.type === "queueStatus") {
         const data = message.data;
-        addQueueStatus(data, queueStatus);
+        updateQueueStatus(queueStatus, data);
         for (const worker of workerSet) {
           worker.send({
             type: "queueStatus",
@@ -58,12 +58,10 @@ if (cluster.isPrimary) {
           });
         }
       }
-      if (message.type === "removeSubscriber") {
-        // PubSubManager.removeSubscriber(message.data);
-      }
+
       if (message.type === "submission") {
         const status = await PubSubManager.addToQueue(message.data);
-        if(status === -1){
+        if (status === -1) {
           worker.send({
             type: "error",
             message: "Queue is full, try again later",
@@ -112,7 +110,7 @@ if (cluster.isPrimary) {
       if (message.type === "workerStatus") {
         ws.send(JSON.stringify(message));
       }
-      if (message.type === "error"){
+      if (message.type === "error") {
         ws.send(JSON.stringify(message));
       }
       if (message.type === "queueStatus") {
@@ -170,12 +168,23 @@ const addWorkerStatus = (
   workerStatuses.add(data);
 };
 
-const addQueueStatus = (data: QueueStatus, queueStatus: Set<QueueStatus>) => {
-  for (const queue of queueStatus) {
-    if (queue.taskId === data.taskId || queue.status === "Completed") {
-      queueStatus.delete(queue);
+const updateQueueStatus = (
+  queueStatus: Set<QueueStatus>,
+  data?: QueueStatus
+) => {
+  if (data) {
+    for (const queue of queueStatus) {
+      if (queue.taskId === data.taskId || queue.status === "Completed") {
+        queueStatus.delete(queue);
+      }
+    }
+    queueStatus.add(data);
+  }
+  else{
+    for (const queue of queueStatus) {
+      if (queue.status === "Completed") {
+        queueStatus.delete(queue);
+      }
     }
   }
-  queueStatus.add(data);
 };
-
