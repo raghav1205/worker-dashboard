@@ -18,18 +18,18 @@ class PubSubManager {
   private workerStatuses: Set<WorkerStatus>;
 
   constructor() {
-    // this.redisClientPublisher = createClient({
-    //   url: "redis://redis:6379",
-    // });
-    // this.redisClientSubscriber = createClient({
-    //   url: "redis://redis:6379",
-    // });
     this.redisClientPublisher = createClient({
-      url: "redis://localhost:6379",
+      url: "redis://redis:6379",
     });
     this.redisClientSubscriber = createClient({
-      url: "redis://localhost:6379",
+      url: "redis://redis:6379",
     });
+    // this.redisClientPublisher = createClient({
+    //   url: "redis://localhost:6379",
+    // });
+    // this.redisClientSubscriber = createClient({
+    //   url: "redis://localhost:6379",
+    // });
     this.subscribers = new Set();
     this.workerStatuses = new Set();
 

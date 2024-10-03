@@ -4,37 +4,9 @@ import os from "os";
 import process from "process";
 import { RedisClientType, createClient } from "redis";
 
-const simulateMemoryFluctuation = () => {
-  let memoryHog: any = [];
-
-  const memoryIncrease = setInterval(() => {
-    memoryHog.push(new Array(1e6).fill("*"));
-    // console.log(`Memory increased, current size: ${memoryHog.length} MB`);
-
-    // Stop increasing after reaching 100MB
-    if (memoryHog.length >= 100) {
-      clearInterval(memoryIncrease);
-      // console.log("Reached maximum memory usage");
-    }
-  }, 500); // Increase memory every 500ms
-
-  // Simulate memory release
-  const memoryRelease = setInterval(() => {
-    const releaseSize = Math.floor(Math.random() * 10) + 1;
-    memoryHog.splice(0, releaseSize);
-    // console.log(`Memory released, current size: ${memoryHog.length} MB`);
-
-    // Stop releasing after memory has been freed completely
-    if (memoryHog.length <= 0) {
-      clearInterval(memoryRelease);
-      // console.log("Memory fully released");
-    }
-  }, 1000); // Release memory every 1000ms
-};
-// Simulate fluctuating resource usage during task processing
 const startWorker = async () => {
   const redisClient: RedisClientType = createClient({
-    url: "redis://localhost:6379",
+    url: "redis://redis:6379",
   });
   await redisClient.connect();
 
