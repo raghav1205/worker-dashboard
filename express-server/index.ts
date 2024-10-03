@@ -52,6 +52,10 @@ if (cluster.isPrimary) {
             type: "workerStatus",
             workerStatuses: Array.from(workerStatuses),
           });
+          worker.send({
+            type: "queueStatus",
+            queueStatus: Array.from(queueStatus),
+          });
         }
       }
       if (message.type === "removeSubscriber") {
