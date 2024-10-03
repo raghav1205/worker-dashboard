@@ -44,7 +44,7 @@ if (cluster.isPrimary) {
             queueStatus: Array.from(queueStatus),
           });
         }
-        console.log("Queue status:", data);
+        // console.log("Queue status:", data);
       }
       if (message.type === "newConnection") {
         updateQueueStatus(queueStatus);
@@ -121,10 +121,11 @@ if (cluster.isPrimary) {
         ws.send(JSON.stringify(message));
       }
       if (message.type === "error") {
+        console.log("Received error:", message);
         ws.send(JSON.stringify(message));
       }
       if (message.type === "queueStatus") {
-        console.log("Received queue status:", message);
+        // console.log("Received queue status:", message);
         ws.send(JSON.stringify(message));
       }
     });
