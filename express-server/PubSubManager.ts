@@ -28,8 +28,6 @@ class PubSubManager {
 
     this.redisClientPublisher.connect();
     this.redisClientSubscriber.connect();
-
-
   }
 
   static getInstance() {
@@ -47,12 +45,16 @@ class PubSubManager {
     if (length > 20) {
       return -1;
     }
-    await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
-    await this.redisClientPublisher.lTrim("submissions", 0, maxQueueLength - 1);
+    const transaction = this.redisClientPublisher.multi();
+
+    transaction.lPush("submissions", JSON.stringify(data));
+
+    transaction.lTrim("submissions", 0, maxQueueLength - 1);
+
+    await transaction.exec();
+
     return 1;
   }
-
-
 }
 
 export default PubSubManager.getInstance();
