@@ -24,7 +24,7 @@ const workerSlice = createSlice({
      
       state.workerStatuses = action.payload
         .sort((a, b) => parseInt(a.workerId) - parseInt(b.workerId))
-        .sort((a, b) => (a.status === "Processing" ? -1 : 1));
+        .sort((a) => (a.status === "Processing" ? -1 : 1));
     },
     setQueueStatus: (state, action: PayloadAction<QueueStatus[]>) => {
 
