@@ -127,7 +127,7 @@ function WorkerCard({ worker }: WorkerProps) {
           title={status === "Processing" ? "Processing" : "Idle"}
         ></div>
       </div>
-      <div className="flex justify-between mx-6  ">
+      <div className="flex justify-between md:mx-6 mx-2 w-full ">
         <h3 className="text-xl font-semibold mb-2">Worker ID: {workerId}</h3>
         <h3 className="text-xl font-semibold mb-2  md:hidden lg:block">{taskId}</h3>
         </div>
