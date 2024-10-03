@@ -29,7 +29,7 @@ function useSocket() {
       else if (data.type === "queueStatus") {
         // console.log("queueStatus:", data.data.queueStatus);
      
-          // console.log("queueStatus:", data.queueStatus);
+          console.log("queueStatus:", data.queueStatus);
           dispatch(setQueueStatus(data.queueStatus));
         
       } 
