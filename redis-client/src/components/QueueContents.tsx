@@ -1,5 +1,4 @@
-// QueueContents.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 
 interface Submission {
@@ -7,29 +6,7 @@ interface Submission {
 }
 
 const QueueContents: React.FC = () => {
-  // const [queueContents, setQueueContents] = useState<Submission[]>([]);
 
-  // useEffect(() => {
-  //   const ws = new WebSocket(`ws://${import.meta.env.VITE_BACKEND_URL}`); // Adjust to your server URL
-
-  //   ws.onopen = () => {
-  //     console.log('Connected to WebSocket');
-  //   };
-
-  //   ws.onmessage = (event) => {
-  //     const message = JSON.parse(event.data);
-  //     // console.log('message:', message);
-  //     if (message.type === 'queueStatus') {
-       
-  //       console.log('queueStatus:', message.data );
-  //       setQueueContents(message.data.queueStatus);
-  //     }
-  //   };
-
-  //   return () => {
-  //     ws.close();
-  //   };
-  // }, []);
   const queueContents = useSelector((state: { worker: { queueStatus: Submission[] } }) => state.worker.queueStatus);
   console.log(queueContents, "queueContents");
   return (

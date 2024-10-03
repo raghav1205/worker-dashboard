@@ -79,10 +79,10 @@ const WorkerStatus = ({ workerStats, timeRemaining }: WorkerProps) => {
             {formatBytes(memoryUsage.rss || 0)}
           </span>
         </div>
-        <div className="w-full bg-gray-300 h-2 rounded-full mt-2">
+        <div className="w-full bg-gray-300 h-2 rounded-full mt-2 ">
           <div
-            className="bg-blue-500 h-2 rounded-full"
-            style={{ width: `${memoryUsagePercent}%` }}
+            className="bg-blue-500 h-2 rounded-full ]"
+            style={{ width: `${freeMemoryPercent}%` }}
           />
         </div>
         <div className="mt-2 text-sm text-gray-600">

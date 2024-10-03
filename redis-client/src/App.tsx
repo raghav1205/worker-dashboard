@@ -59,7 +59,7 @@ function SubmitTask() {
   const handleSubmit = async () => {
     const randomTaskId = Math.random().toString(36).substring(7);
     const taskId = `Task-${randomTaskId}`;
-    await fetch(`http://${import.meta.env.VITE_BACKEND_URL}/submission`, {
+    await fetch(`https://${import.meta.env.VITE_BACKEND_URL}/submission`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -70,7 +70,7 @@ function SubmitTask() {
 
   return (
     <motion.div
-      className="shadow-lg rounded-lg p-6 "
+      className=" rounded-lg p-6 "
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
