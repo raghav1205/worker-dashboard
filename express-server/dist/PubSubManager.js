@@ -46,8 +46,10 @@ class PubSubManager {
     }
     addToQueue(data) {
         return __awaiter(this, void 0, void 0, function* () {
+            console.log("adding to queue:", data);
             yield this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
-            this.updateQueueStatus();
+            const length = yield this.redisClientPublisher.lLen("submissions");
+            return length;
         });
     }
     getFromQueue() {
@@ -120,14 +122,15 @@ class PubSubManager {
         return __awaiter(this, void 0, void 0, function* () {
             // console.log("updating queue status");
             const queueStatus = yield this.getQueueContents();
-            // console.log("queueStatus before :", queueStatus);
+            console.log("queueStatus before :", queueStatus);
             const parsedQueueStatus = queueStatus
                 .map((status) => JSON.parse(status))
                 .filter((status) => status.status !== "Completed");
             const data = {
                 queueStatus: parsedQueueStatus,
             };
-            // console.log("queueStatus after", data.queueStatus);
+            console.log("queueStatus after :", data);
+            return data;
             // this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
         });
     }
@@ -147,8 +150,15 @@ class PubSubManager {
         return __awaiter(this, void 0, void 0, function* () {
             // Send current worker statuses
             const workerStatuses = yield this.redisClientPublisher.hGetAll("worker-statuses");
+            console.log("Current worker statuses:", workerStatuses); // Log the statuses
             for (const [workerId, status] of Object.entries(workerStatuses)) {
-                ws.send(JSON.stringify(JSON.parse(status)));
+                try {
+                    const parsedStatus = JSON.parse(status);
+                    // ws.send(JSON.stringify(parsedStatus));
+                }
+                catch (error) {
+                    console.error("Error parsing status:", error);
+                }
             }
         });
     }

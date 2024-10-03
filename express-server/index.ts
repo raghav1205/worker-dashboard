@@ -1,25 +1,76 @@
 import express from "express";
 import WebSocket, { WebSocket as WsType } from "ws";
 import http from "http";
-import PubSubManager from "./PubSubManager";
-import cluster from "cluster";
-import os from "os";
+import cluster, { Worker } from "cluster";
 import cors from "cors";
 import startWorker from "./Worker";
+import PubSubManager from "./PubSubManager";
+import { WorkerStatus, QueueStatus } from "./types";
 
-export const workerStatuses: { [key: number]: string } = {};
 if (cluster.isPrimary) {
   // const numCPUs = os.cpus().length;
-  // // Fork workers
+  // Fork workers
   // console.log(`Master process is running. Forking ${numCPUs} workers...`);
+  const workerSet = new Set<Worker>();
+  const workerStatuses = new Set<WorkerStatus>();
+  const queueStatus = new Set<QueueStatus>();
 
   for (let i = 0; i < 4; i++) {
     const worker = cluster.fork();
-    if (worker.process.pid !== undefined) {
-      // workerStatuses[worker.process.pid] = "Idle";
-    }
-    // console.log(workerStatuses, "workerstatuses");
+    workerSet.add(worker);
   }
+
+  cluster.on("message", async (worker, message) => {
+    console.log(`Message from worker ${worker.process.pid}: ${message}`);
+    // console.log("message", message.type);
+    // console.log("message", JSON.parse(message));
+    try {
+      if (message.type === "workerStatus") {
+        // PubSubManager.updateWorkerStatus(message.data);
+        addWorkerStatus(message.data, workerStatuses);
+        for (const worker of workerSet) {
+          worker.send({
+            type: "workerStatus",
+            workerStatuses: Array.from(workerStatuses),
+          });
+        }
+      }
+      if (message.type === "queueStatus") {
+        const data = message.data;
+        addQueueStatus(data, queueStatus);
+        for (const worker of workerSet) {
+          worker.send({
+            type: "queueStatus",
+            queueStatus: Array.from(queueStatus),
+          });
+        }
+        console.log("Queue status:", data);
+      }
+      if (message.type === "newConnection") {
+        for (const worker of workerSet) {
+          worker.send({
+            type: "workerStatus",
+            workerStatuses: Array.from(workerStatuses),
+          });
+        }
+      }
+      if (message.type === "removeSubscriber") {
+        // PubSubManager.removeSubscriber(message.data);
+      }
+      if (message.type === "submission") {
+        const length = await PubSubManager.addToQueue(message.data);
+        if(length  > 20){
+          worker.send({
+            type: "error",
+            message: "Queue is full",
+          });
+
+        }
+      }
+    } catch (err) {
+      console.log("Error in message handling :", err);
+    }
+  });
 
   // Listen for worker exit events and replace dead workers
   cluster.on("exit", (worker, code, signal) => {
@@ -34,46 +85,66 @@ if (cluster.isPrimary) {
     }
   });
 } else {
-
   const app = express();
   app.use(express.json());
   app.use(cors());
-
+  const wsMap = new Map<number, Set<WebSocket>>();
   const server = http.createServer(app);
   const wss = new WebSocket.Server({ server });
+  const pid = cluster.worker?.process.pid;
 
-  wss.on("connection", (ws) => {
-    ws.on("message", (message: { taskId: string }) => {
-      console.log(`Received message => ${message}`);
+  wss.on("connection", async (ws) => {
+    if (pid !== undefined) {
+      if (!wsMap.has(pid)) {
+        wsMap.set(pid, new Set<WebSocket>());
+      }
+      wsMap.get(pid)?.add(ws);
+      if (process.send) process.send({ type: "newConnection" });
+    }
+
+    process.on("message", (message: MessageEvent) => {
+      if (message.type === "workerStatus") {
+        ws.send(JSON.stringify(message));
+      }
+      if (message.type === "workerStatus") {
+        ws.send(JSON.stringify(message));
+      }
+      if (message.type === "error"){
+        ws.send(JSON.stringify(message));
+      }
+      if (message.type === "queueStatus") {
+        console.log("Received queue status:", message);
+        ws.send(JSON.stringify(message));
+      }
     });
-    PubSubManager.addSubscriber(ws);
 
-    // ws.send(JSON.stringify({ workerId: cluster.worker?.process.pid, workerStatuses }));
     ws.on("close", () => {
       console.log("Connection closed");
-      PubSubManager.removeSubscriber(ws);
+      if (pid !== undefined) {
+        wsMap.get(pid)?.delete(ws);
+      }
     });
-
-    // ws.send("Hello! Message From Server!!");
   });
   console.log("new worker", process.pid);
   startWorker();
   app.post("/submission", async (req, res) => {
     const { taskId } = req.body;
 
-    PubSubManager.addToQueue({ taskId, status: "Pending" });
-    // PubSubManager.updateQueueStatus();
-    // console.log(workerStatuses, "workerstatuses");
+    if (process.send) {
+      process.send({ type: "submission", data: { taskId, status: "Pending" } });
+      process.send({
+        type: "queueStatus",
+        data: { taskId, status: "Pending" },
+      });
+    }
 
     res.send({ message: "Submission received" });
   });
 
+  process.on("message", (message) => {});
+
   process.on("exit", async () => {
     console.log("Worker is exiting", process.pid);
-    await PubSubManager.updateWorkerStatus({
-      workerId: process.pid,
-      status: "Dead",
-    });
   });
 
   app.get("/", (req, res) => {
@@ -83,3 +154,25 @@ if (cluster.isPrimary) {
     console.log("Server is running on port 3000");
   });
 }
+
+const addWorkerStatus = (
+  data: WorkerStatus,
+  workerStatuses: Set<WorkerStatus>
+) => {
+  for (const workerStatus of workerStatuses) {
+    if (workerStatus.workerId === data.workerId) {
+      workerStatuses.delete(workerStatus);
+    }
+  }
+  workerStatuses.add(data);
+};
+
+const addQueueStatus = (data: QueueStatus, queueStatus: Set<QueueStatus>) => {
+  for (const queue of queueStatus) {
+    if (queue.taskId === data.taskId || queue.status === "Completed") {
+      queueStatus.delete(queue);
+    }
+  }
+  queueStatus.add(data);
+};
+

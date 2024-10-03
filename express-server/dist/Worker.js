@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const PubSubManager_1 = __importDefault(require("./PubSubManager"));
+// import PubSubManager from "./PubSubManager";
 const cluster_1 = __importDefault(require("cluster"));
 const os_1 = __importDefault(require("os"));
-const _1 = require(".");
+const process_1 = __importDefault(require("process"));
+const redis_1 = require("redis");
 const simulateMemoryFluctuation = () => {
     let memoryHog = [];
     const memoryIncrease = setInterval(() => {
@@ -42,13 +43,19 @@ const simulateMemoryFluctuation = () => {
 // Simulate fluctuating resource usage during task processing
 const startWorker = () => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
+    const redisClient = (0, redis_1.createClient)({
+        url: "redis://localhost:6379",
+    });
+    yield redisClient.connect();
     let previousStatus = "Idle";
     const workerId = (_a = cluster_1.default.worker) === null || _a === void 0 ? void 0 : _a.process.pid;
     if (workerId) {
-        PubSubManager_1.default.updateWorkerStatus({
-            workerId,
-            status: "Not started",
-        });
+        if (process_1.default.send) {
+            process_1.default.send({
+                type: "workerStatus",
+                data: { workerId, status: "Not started" },
+            });
+        }
     }
     while (true) {
         const workerId = (_b = cluster_1.default.worker) === null || _b === void 0 ? void 0 : _b.process.pid;
@@ -56,13 +63,16 @@ const startWorker = () => __awaiter(void 0, void 0, void 0, function* () {
         let taskStartTime = 0;
         let taskEndTime = 0;
         if (previousStatus !== "Idle" && workerId) {
-            PubSubManager_1.default.updateWorkerStatus({
-                workerId,
-                status: "Idle",
-            });
+            if (process_1.default.send) {
+                process_1.default.send({
+                    type: "workerStatus",
+                    data: { workerId, status: "Idle" },
+                });
+            }
             previousStatus = "Idle";
         }
-        const submission = yield PubSubManager_1.default.getFromQueue();
+        const result = yield redisClient.brPop("submissions", 0);
+        const submission = result ? result.element : null;
         if (submission) {
             console.log("Processing submission:", submission);
             if (previousStatus !== "Processing" && workerId) {
@@ -72,17 +82,24 @@ const startWorker = () => __awaiter(void 0, void 0, void 0, function* () {
                 intervalId = setInterval(() => {
                     const timeElapsed = Date.now() - taskStartTime;
                     const timeRemaining = Math.floor(taskEndTime - timeElapsed);
-                    PubSubManager_1.default.updateWorkerStatus({
-                        workerId,
-                        taskId,
-                        status: "Processing",
-                        workerResources: monitorResources(),
-                        timeRemaining,
-                    });
+                    if (process_1.default.send) {
+                        process_1.default.send({
+                            type: "workerStatus",
+                            data: {
+                                workerId,
+                                taskId,
+                                status: "Processing",
+                                workerResources: monitorResources(),
+                                timeRemaining,
+                            },
+                        });
+                        process_1.default.send({
+                            type: "queueStatus",
+                            data: { taskId, status: "Processing" },
+                        });
+                    }
                 }, 1000);
             }
-            // simulateMemoryFluctuation();
-            // Simulate task processing delay
             try {
                 yield new Promise((resolve) => {
                     taskStartTime = Date.now();
@@ -92,45 +109,45 @@ const startWorker = () => __awaiter(void 0, void 0, void 0, function* () {
             catch (error) {
                 console.log(error, "promise error");
                 if (workerId) {
-                    PubSubManager_1.default.updateWorkerStatus({
-                        workerId,
-                        status: "Dead",
-                    });
+                    if (process_1.default.send) {
+                        process_1.default.send({
+                            type: "workerStatus",
+                            data: { workerId, status: "Dead" },
+                        });
+                    }
                 }
             }
-            if (submission) {
-                PubSubManager_1.default.updateQueueItem({
-                    taskId: JSON.parse(submission).taskId,
-                    status: "Completed",
+            console.log("Task completed:", JSON.parse(submission).taskId);
+            if (process_1.default.send) {
+                process_1.default.send({
+                    type: "queueStatus",
+                    data: { taskId: JSON.parse(submission).taskId, status: "Completed" },
+                });
+                process_1.default.send({
+                    type: "workerStatus",
+                    data: { workerId, status: "Idle" },
                 });
             }
-            if (workerId && _1.workerStatuses[workerId] === "Dead") {
-                PubSubManager_1.default.updateWorkerStatus({
-                    workerId,
-                    status: "Dead",
-                });
-            }
-            else {
-                // After processing, set the worker back to "Idle"
-                if (workerId) {
-                    PubSubManager_1.default.updateWorkerStatus({
-                        workerId,
-                        status: "Idle",
-                    });
-                }
-            }
-            previousStatus = "Idle";
-            if (intervalId)
-                clearInterval(intervalId);
         }
+        else {
+            // After processing, set the worker back to "Idle"
+            if (workerId) {
+                console.log("Worker is idle now");
+                if (process_1.default.send) {
+                }
+            }
+        }
+        previousStatus = "Idle";
+        if (intervalId)
+            clearInterval(intervalId);
         yield new Promise((resolve) => setTimeout(resolve, 500));
     }
 });
 const monitorResources = () => {
-    const memoryUsage = process.memoryUsage();
+    const memoryUsage = process_1.default.memoryUsage();
     const freeMemory = os_1.default.freemem();
     const totalMemory = os_1.default.totalmem();
-    const cpuUsage = process.cpuUsage();
+    const cpuUsage = process_1.default.cpuUsage();
     const userCpuTime = cpuUsage.user / 1e6;
     const systemCpuTime = cpuUsage.system / 1e6;
     return {

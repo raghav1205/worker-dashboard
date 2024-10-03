@@ -57,8 +57,10 @@ class PubSubManager {
   }
 
   public async addToQueue(data: any) {
+    console.log("adding to queue:", data);
     await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
-    this.updateQueueStatus();
+    const length = await this.redisClientPublisher.lLen("submissions");
+    return length;
   }
 
   public async getFromQueue() {
@@ -146,7 +148,7 @@ class PubSubManager {
   public async updateQueueStatus() {
     // console.log("updating queue status");
     const queueStatus = await this.getQueueContents();
-    // console.log("queueStatus before :", queueStatus);
+    console.log("queueStatus before :", queueStatus);
     const parsedQueueStatus = queueStatus
       .map((status) => JSON.parse(status))
       .filter((status) => status.status !== "Completed");
@@ -154,7 +156,8 @@ class PubSubManager {
     const data = {
       queueStatus: parsedQueueStatus,
     };
-    // console.log("queueStatus after", data.queueStatus);
+    console.log("queueStatus after :", data);
+    return data;
 
     // this.broadcastMessage(JSON.stringify({ type: "queueStatus", data }));
   }
@@ -171,13 +174,18 @@ class PubSubManager {
   // Send the current worker statuses and queue length to the newly connected WebSocket client
   private async sendCurrentState(ws: WebSocket): Promise<void> {
     // Send current worker statuses
-    const workerStatuses = await this.redisClientPublisher.hGetAll(
-      "worker-statuses"
-    );
+    const workerStatuses = await this.redisClientPublisher.hGetAll("worker-statuses");
+    console.log("Current worker statuses:", workerStatuses); // Log the statuses
+
     for (const [workerId, status] of Object.entries(workerStatuses)) {
-      ws.send(JSON.stringify(JSON.parse(status)));
+        try {
+            const parsedStatus = JSON.parse(status);
+            // ws.send(JSON.stringify(parsedStatus));
+        } catch (error) {
+            console.error("Error parsing status:", error);
+        }
     }
-  }
+}
 
   private broadcastMessage(data: any) {
    const broadData = JSON.parse(data);
