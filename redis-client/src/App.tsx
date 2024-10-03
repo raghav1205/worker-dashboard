@@ -127,16 +127,16 @@ function WorkerCard({ worker }: WorkerProps) {
           title={status === "Processing" ? "Processing" : "Idle"}
         ></div>
       </div>
-      <div className="flex justify-between mx-6">
+      <div className="flex justify-between mx-6  ">
         <h3 className="text-xl font-semibold mb-2">Worker ID: {workerId}</h3>
-        <h3 className="text-xl font-semibold mb-2">{taskId}</h3>
-      </div>
+        <h3 className="text-xl font-semibold mb-2  md:hidden lg:block">{taskId}</h3>
+        </div>
 
       {/* <h2 className="text-md font-semibold mb-4">{kworker?.taskId}</h2> */}
 
       <div className="  ">
         {/* {worker?.workerResources && ( */}
-        <div className="h-full md:w-full  ">
+        <div className="h-full md:w-full w-full  ">
           <WorkerStatus
             workerStats={worker?.workerResources ?? null}
             timeRemaining={worker?.timeRemaining ?? 0}
