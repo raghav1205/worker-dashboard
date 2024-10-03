@@ -129,7 +129,7 @@ function WorkerCard({ worker }: WorkerProps) {
       </div>
       <div className="flex justify-between md:mx-6 w-full">
         <h3 className="text-xl font-semibold mb-2">Worker ID: {workerId}</h3>
-        <h3 className="text-xl font-semibold mb-2 mr-4 md:pr-6 md:hidden lg:block">
+        <h3 className="text-xl font-semibold mb-2 mr-4 md:pr-8 md:hidden lg:block">
           {taskId && taskId.length > 12 ? `${taskId.substring(0, 12)}...` : taskId ?? ""}
         </h3>
         </div>
