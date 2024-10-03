@@ -8,7 +8,7 @@ interface Submission {
 const QueueContents: React.FC = () => {
 
   const queueContents = useSelector((state: { worker: { queueStatus: Submission[] } }) => state.worker.queueStatus);
-  console.log(queueContents, "queueContents");
+  // console.log(queueContents, "queueContents");
   return (
     <div className=" rounded-md shadow-md w-[80%]  text-center mx-auto">
       <h2 className="text-xl font-semibold mb-4 text-white">Queue </h2>
