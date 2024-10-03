@@ -184,6 +184,7 @@ const updateQueueStatus = (
         queueStatus.delete(queue);
       }
     }
+    if (queueStatus.size < 20)
     queueStatus.add(data);
   }
   else{
