@@ -48,7 +48,7 @@ if (cluster_1.default.isPrimary) {
             }
             if (message.type === "queueStatus") {
                 const data = message.data;
-                addQueueStatus(data, queueStatus);
+                updateQueueStatus(queueStatus, data);
                 for (const worker of workerSet) {
                     worker.send({
                         type: "queueStatus",
@@ -58,22 +58,33 @@ if (cluster_1.default.isPrimary) {
                 console.log("Queue status:", data);
             }
             if (message.type === "newConnection") {
+                updateQueueStatus(queueStatus);
                 for (const worker of workerSet) {
                     worker.send({
                         type: "workerStatus",
                         workerStatuses: Array.from(workerStatuses),
                     });
+                    worker.send({
+                        type: "queueStatus",
+                        queueStatus: Array.from(queueStatus),
+                    });
                 }
             }
-            if (message.type === "removeSubscriber") {
-                // PubSubManager.removeSubscriber(message.data);
-            }
             if (message.type === "submission") {
-                const length = yield PubSubManager_1.default.addToQueue(message.data);
-                if (length > 20) {
+                const status = yield PubSubManager_1.default.addToQueue(message.data);
+                console.log("Status:", status);
+                if (status === -1) {
                     worker.send({
                         type: "error",
-                        message: "Queue is full",
+                        message: "Queue is full, try again later",
+                    });
+                }
+                else {
+                    console.log("Sending initial queue status to worker");
+                    updateQueueStatus(queueStatus, message.data);
+                    worker.send({
+                        type: "queueStatus",
+                        queueStatus: Array.from(queueStatus),
                     });
                 }
             }
@@ -142,10 +153,6 @@ else {
         const { taskId } = req.body;
         if (process.send) {
             process.send({ type: "submission", data: { taskId, status: "Pending" } });
-            process.send({
-                type: "queueStatus",
-                data: { taskId, status: "Pending" },
-            });
         }
         res.send({ message: "Submission received" });
     }));
@@ -168,11 +175,20 @@ const addWorkerStatus = (data, workerStatuses) => {
     }
     workerStatuses.add(data);
 };
-const addQueueStatus = (data, queueStatus) => {
-    for (const queue of queueStatus) {
-        if (queue.taskId === data.taskId || queue.status === "Completed") {
-            queueStatus.delete(queue);
+const updateQueueStatus = (queueStatus, data) => {
+    if (data) {
+        for (const queue of queueStatus) {
+            if (queue.taskId === data.taskId || queue.status === "Completed") {
+                queueStatus.delete(queue);
+            }
+        }
+        queueStatus.add(data);
+    }
+    else {
+        for (const queue of queueStatus) {
+            if (queue.status === "Completed") {
+                queueStatus.delete(queue);
+            }
         }
     }
-    queueStatus.add(data);
 };

@@ -62,6 +62,7 @@ if (cluster.isPrimary) {
 
       if (message.type === "submission") {
         const status = await PubSubManager.addToQueue(message.data);
+        console.log("Status:", status);
         if (status === -1) {
           worker.send({
             type: "error",
@@ -69,9 +70,11 @@ if (cluster.isPrimary) {
           });
         }
         else{
+          console.log("Sending initial queue status to worker");
+          updateQueueStatus(queueStatus, message.data);
           worker.send({
             type: "queueStatus",
-            data: { taskId: message.data.taskId, status: "Pending" },
+            queueStatus: Array.from(queueStatus),
           });
         }
       }

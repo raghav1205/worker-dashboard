@@ -17,30 +17,6 @@ const cluster_1 = __importDefault(require("cluster"));
 const os_1 = __importDefault(require("os"));
 const process_1 = __importDefault(require("process"));
 const redis_1 = require("redis");
-const simulateMemoryFluctuation = () => {
-    let memoryHog = [];
-    const memoryIncrease = setInterval(() => {
-        memoryHog.push(new Array(1e6).fill("*"));
-        // console.log(`Memory increased, current size: ${memoryHog.length} MB`);
-        // Stop increasing after reaching 100MB
-        if (memoryHog.length >= 100) {
-            clearInterval(memoryIncrease);
-            // console.log("Reached maximum memory usage");
-        }
-    }, 500); // Increase memory every 500ms
-    // Simulate memory release
-    const memoryRelease = setInterval(() => {
-        const releaseSize = Math.floor(Math.random() * 10) + 1;
-        memoryHog.splice(0, releaseSize);
-        // console.log(`Memory released, current size: ${memoryHog.length} MB`);
-        // Stop releasing after memory has been freed completely
-        if (memoryHog.length <= 0) {
-            clearInterval(memoryRelease);
-            // console.log("Memory fully released");
-        }
-    }, 1000); // Release memory every 1000ms
-};
-// Simulate fluctuating resource usage during task processing
 const startWorker = () => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const redisClient = (0, redis_1.createClient)({
