@@ -68,6 +68,12 @@ if (cluster.isPrimary) {
             message: "Queue is full, try again later",
           });
         }
+        else{
+          worker.send({
+            type: "queueStatus",
+            data: { taskId: message.data.taskId, status: "Pending" },
+          });
+        }
       }
     } catch (err) {
       console.log("Error in message handling :", err);
