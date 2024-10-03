@@ -1,14 +1,4 @@
 import { RedisClientType, createClient } from "redis";
-import WebSocket from "ws";
-import process from "process";
-
-interface WorkerStatus {
-  workerId: number;
-  taskId?: string;
-  status: string;
-  timeRemaining?: number;
-  workerResources?: any;
-}
 
 class PubSubManager {
   private static instance: PubSubManager;

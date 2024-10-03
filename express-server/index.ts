@@ -47,6 +47,7 @@ if (cluster.isPrimary) {
         console.log("Queue status:", data);
       }
       if (message.type === "newConnection") {
+        updateQueueStatus(queueStatus);
         for (const worker of workerSet) {
           worker.send({
             type: "workerStatus",
