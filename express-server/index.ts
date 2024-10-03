@@ -134,10 +134,6 @@ if (cluster.isPrimary) {
 
     if (process.send) {
       process.send({ type: "submission", data: { taskId, status: "Pending" } });
-      process.send({
-        type: "queueStatus",
-        data: { taskId, status: "Pending" },
-      });
     }
 
     res.send({ message: "Submission received" });
