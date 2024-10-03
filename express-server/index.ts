@@ -58,13 +58,12 @@ if (cluster.isPrimary) {
         // PubSubManager.removeSubscriber(message.data);
       }
       if (message.type === "submission") {
-        const length = await PubSubManager.addToQueue(message.data);
-        if(length  > 20){
+        const status = await PubSubManager.addToQueue(message.data);
+        if(status === -1){
           worker.send({
             type: "error",
-            message: "Queue is full",
+            message: "Queue is full, try again later",
           });
-
         }
       }
     } catch (err) {

@@ -58,9 +58,12 @@ class PubSubManager {
 
   public async addToQueue(data: any) {
     console.log("adding to queue:", data);
-    await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
     const length = await this.redisClientPublisher.lLen("submissions");
-    return length;
+    if (length > 20) {
+      return -1;
+    }
+    await this.redisClientPublisher.lPush("submissions", JSON.stringify(data));
+    return 1;
   }
 
   public async getFromQueue() {
@@ -91,33 +94,24 @@ class PubSubManager {
     console.log("sending worker status:", `${data.workerId} - ${data.status}`);
     const workerId = data.workerId;
     console.log("workerId", workerId);
-   
-    // if (data.status === "Dead") {
-      //   console.log("Worker is dead", workerId);
-      //   await this.redisClientPublisher.hDel(
-        //     "worker-statuses",
-        //     workerId.toString()
-        //   );
-        //   this.workerStatuses.delete(data);
-        // } else {
-          await this.redisClientPublisher.hSet(
-            "worker-statuses",
-            data.workerId.toString(),
-            JSON.stringify(data)
-          );
-          this.workerStatuses.add(data);
-          // }
-          await this.redisClientPublisher.publish(
-            "workerStatus",
-            JSON.stringify(data)
-          );
-          console.log("status", this.workerStatuses);
-          const hsetData = await this.redisClientPublisher.hGet(
-            "worker-statuses",
-            workerId.toString()
-          );
-          console.log("hsetData", hsetData);
-    // await this.updateQueueStatus();
+
+    await this.redisClientPublisher.hSet(
+      "worker-statuses",
+      data.workerId.toString(),
+      JSON.stringify(data)
+    );
+    this.workerStatuses.add(data);
+
+    await this.redisClientPublisher.publish(
+      "workerStatus",
+      JSON.stringify(data)
+    );
+    console.log("status", this.workerStatuses);
+    const hsetData = await this.redisClientPublisher.hGet(
+      "worker-statuses",
+      workerId.toString()
+    );
+    console.log("hsetData", hsetData);
   }
 
   private async subscribeToWorkerStatus() {
@@ -127,7 +121,9 @@ class PubSubManager {
       console.log("workerStatuses", this.workerStatuses.size);
       const workerStatusesArray = Array.from(this.workerStatuses);
       console.log("workerStatusesArray", workerStatusesArray.length);
-      this.broadcastMessage(JSON.stringify({type:'workerStatus', data: workerStatusesArray}));
+      this.broadcastMessage(
+        JSON.stringify({ type: "workerStatus", data: workerStatusesArray })
+      );
       // this.broadcastMessage(message);
     });
   }
@@ -174,34 +170,34 @@ class PubSubManager {
   // Send the current worker statuses and queue length to the newly connected WebSocket client
   private async sendCurrentState(ws: WebSocket): Promise<void> {
     // Send current worker statuses
-    const workerStatuses = await this.redisClientPublisher.hGetAll("worker-statuses");
+    const workerStatuses = await this.redisClientPublisher.hGetAll(
+      "worker-statuses"
+    );
     console.log("Current worker statuses:", workerStatuses); // Log the statuses
 
     for (const [workerId, status] of Object.entries(workerStatuses)) {
-        try {
-            const parsedStatus = JSON.parse(status);
-            // ws.send(JSON.stringify(parsedStatus));
-        } catch (error) {
-            console.error("Error parsing status:", error);
-        }
+      try {
+        const parsedStatus = JSON.parse(status);
+        // ws.send(JSON.stringify(parsedStatus));
+      } catch (error) {
+        console.error("Error parsing status:", error);
+      }
     }
-}
+  }
 
   private broadcastMessage(data: any) {
-   const broadData = JSON.parse(data);
-   console.log("worker no:", process.pid);
-   console.log("broadData", broadData);
-  //  for (let  item of broadData.data){
-  //     console.log(item);
-  //  }
-    
+    const broadData = JSON.parse(data);
+    console.log("worker no:", process.pid);
+    console.log("broadData", broadData);
+    //  for (let  item of broadData.data){
+    //     console.log(item);
+    //  }
+
     this.subscribers.forEach((subscriber) => {
-      
       // subscriber.send(data);
-      try{
-      subscriber.send(data);
-      }
-      catch(err){
+      try {
+        subscriber.send(data);
+      } catch (err) {
         console.log("Error in sending message to subscriber:", err);
       }
     });
@@ -229,6 +225,5 @@ class PubSubManager {
     this.workerStatuses.add(data);
   }
 }
-
 
 export default PubSubManager.getInstance();
