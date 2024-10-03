@@ -115,7 +115,7 @@ function WorkerCard({ worker }: WorkerProps) {
   };
   return (
     <motion.div
-      className={`shadow-lg rounded-lg p-3 md:p-6 relative overflow-hidden  ${getStatusClasses()}`}
+      className={`shadow-lg flex-col justify-center items-center rounded-lg p-3 relative overflow-hidden  ${getStatusClasses()}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -127,7 +127,7 @@ function WorkerCard({ worker }: WorkerProps) {
           title={status === "Processing" ? "Processing" : "Idle"}
         ></div>
       </div>
-      <div className="flex justify-between md:mx-6 mx-2 w-full ">
+      <div className="flex justify-between md:mx-6 w-full">
         <h3 className="text-xl font-semibold mb-2">Worker ID: {workerId}</h3>
         <h3 className="text-xl font-semibold mb-2  md:hidden lg:block">{taskId}</h3>
         </div>
