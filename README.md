@@ -12,7 +12,7 @@ A real-time dashboard application for monitoring worker tasks and statuses, buil
 
 ## Tech Stack
 
-- **Frontend**: React, Next.js
+- **Frontend**: React
 - **Backend**: TypeScript, Node.js
 - **Task Queue**: Redis
 - **Real-time Communication**: WebSocket
